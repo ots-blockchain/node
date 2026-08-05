@@ -66,7 +66,7 @@ To clone the repository and build the Docker image locally:
 
 ```bash
 # Clone the repository
-git clone https://github.com/grovvik/ots.git
+git clone https://github.com/ots-blockchain/node.git
 cd ots/node
 
 # Build the local Docker image
