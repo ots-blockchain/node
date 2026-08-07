@@ -1,7 +1,7 @@
 # OTS Blockchain
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Docker Pulls](https://img.shields.io/docker/pulls/grovvik/ots-node)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Docker Pulls](https://img.shields.io/docker/pulls/grovvik/ots-node)](https://hub.docker.com/r/grovvik/ots-node)
 
 OTS Blockchain is a decentralized, custom-built blockchain platform featuring an integrated peer-to-peer (P2P) network, secure wallet management, advanced cryptography, and a JavaScript-based smart contract execution environment.
 
