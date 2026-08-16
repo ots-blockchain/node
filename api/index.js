@@ -25,7 +25,8 @@ db.exec(`
         nonce INTEGER,
         data TEXT,
         fee TEXT,
-        valid INTEGER
+        valid INTEGER,
+        gasLimit TEXT
     );
     CREATE INDEX IF NOT EXISTS idx_tx_sender ON transactions(sender);
     CREATE INDEX IF NOT EXISTS idx_tx_receiver ON transactions(receiver);
@@ -38,6 +39,12 @@ db.exec(`
         txCount INTEGER
     );
 `);
+
+try {
+    db.exec(`ALTER TABLE transactions ADD COLUMN gasLimit TEXT`);
+} catch (e) {
+    // column already exists
+}
 
 function prepareForJson(value) {
     if (typeof value === 'bigint') {
@@ -63,7 +70,7 @@ function formatTx(tx) {
     if (tx.hash) txHash = tx.hash;
     else if (tx.signature) txHash = tx.signature;
     else if (typeof tx.getHash === 'function') txHash = tx.getHash();
-    return {
+    const formatted = {
         hash: txHash,
         signature: tx.signature || tx.hash || "",
         type: tx.type,
@@ -77,13 +84,19 @@ function formatTx(tx) {
         fee: (tx.fee || 0).toString(),
         valid: (tx.blockIndex === 0 || tx.valid === 1 || tx.valid === true)
     };
+
+    if (tx.type === 'call') {
+        formatted.gasLimit = (tx.gasLimit !== undefined && tx.gasLimit !== null) ? tx.gasLimit.toString() : '0';
+    }
+
+    return formatted;
 }
 
 function indexBlock(block) {
     const insertTx = db.prepare(`
         INSERT OR REPLACE INTO transactions 
-        (hash, blockIndex, type, sender, receiver, amount, timestamp, nonce, data, fee, valid) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (hash, blockIndex, type, sender, receiver, amount, timestamp, nonce, data, fee, valid, gasLimit) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const insertBlock = db.prepare(`
@@ -112,7 +125,8 @@ function indexBlock(block) {
                 tx.nonce,
                 tx.data || '',
                 (tx.fee || 0n).toString(),
-                (tx.valid || block.header.index === 0) ? 1 : 0
+                (tx.valid || block.header.index === 0) ? 1 : 0,
+                tx.gasLimit !== undefined && tx.gasLimit !== null ? tx.gasLimit.toString() : null
             );
         }
     })();

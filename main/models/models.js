@@ -15,12 +15,12 @@ class Transaction {
         this.type = type;
         this.from = from;
         this.to = to;
-        this.amount = amount;
+        this.amount = typeof amount === 'string' || typeof amount === 'number' ? BigInt(amount) : amount;
         this.data = data;
         this.nonce = nonce;
         this.signature = signature;
         this.timestamp = timestamp;
-        this.gasLimit = gasLimit;
+        this.gasLimit = typeof gasLimit === 'string' || typeof gasLimit === 'number' ? BigInt(gasLimit) : gasLimit;
         if (valid !== undefined) {
             this.valid = valid;
         }
