@@ -42,7 +42,7 @@ To pull and run the validator node image from Docker Hub:
 
 ```bash
 # Pull the latest image
-docker pull grovvik/ots-node:latest
+docker pull grovvik/ots-node:main
 
 # Run the validator node with environment variables
 docker run -d \
@@ -51,13 +51,13 @@ docker run -d \
   -e PEERS="ws://peer-node-ip:5001" \
   -e KEY="YOUR_VALIDATOR_PRIVATE_KEY" \
   --name ots-validator \
-  grovvik/ots-node:latest
+  grovvik/ots-node:main
 ```
 
 Using a `.env` file:
 
 ```bash
-docker run -d -p 5001:5001 --env-file .env --name ots-validator grovvik/ots-node:latest
+docker run -d -p 5001:5001 --env-file .env --name ots-validator grovvik/ots-node:main
 ```
 
 ### 2. Building the Image Locally
@@ -89,7 +89,7 @@ docker run -d \
   -e PORT=3000 \
   -e SEED_NODE_URL="ws://127.0.0.1:5001" \
   --name ots-api-node \
-  grovvik/ots-node:latest node api/index.js
+  grovvik/ots-node:main node api/index.js
 ```
 
 Or run it directly using Node.js:
