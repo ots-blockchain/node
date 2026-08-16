@@ -172,7 +172,7 @@ let PEERS = [];
                 from: myKeys.publicKey,
                 to: contractAddress,
                 data: json,
-                gasLimit: 100000n,
+                gasLimit: 1000000000n,
                 amount: BigInt(amount),
                 nonce: await node.calculateNonce(myKeys.publicKey)
             });
