@@ -349,6 +349,7 @@ class Blockchain {
                 return true;
             }
         } catch (e) {
+            this.state.rollback();
             logger.error(`Block Rejected:`, e);
             return false;
         }
@@ -362,37 +363,38 @@ class Blockchain {
 
         const txs = this.mempool.slice(0, consts.MAX_TXS_PER_BLOCK);
 
-        const snapshot = CryptoUtils.deserializeWithBigInt(CryptoUtils.serializeWithBigInt(this.state.stateCache));
-        const modifiedSnapshot = new Set(this.state.modifiedKeys);
+        const sandboxState = this.state.createSandbox();
+        const originalState = this.state;
+        this.state = sandboxState;
+        this.vm.state = sandboxState;
 
         const validTxs = [];
         const prevBlock = this.chain[this.chain.length - 1];
         const nextIndex = prevBlock ? prevBlock.header.index + 1 : 0;
-
         const currentTimestamp = Date.now();
 
-        for (const tx of txs) {
-            await this._processTransaction(tx, this.validatorAddress, nextIndex);
+        try {
+            for (const tx of txs) {
+                await this._processTransaction(tx, this.validatorAddress, nextIndex);
+                validTxs.push(tx);
+            }
 
-            validTxs.push(tx);
+            const prevRoot = prevBlock ? prevBlock.header.stateRoot : "0";
+            const stateRoot = await sandboxState.getRootHash(prevRoot);
+
+            return new Block(
+                nextIndex,
+                prevBlock ? prevBlock.getHash() : null,
+                validTxs,
+                this.validatorAddress,
+                stateRoot,
+                [],
+                currentTimestamp
+            );
+        } finally {
+            this.state = originalState;
+            this.vm.state = originalState;
         }
-
-        const prevRoot = prevBlock ? prevBlock.header.stateRoot : "0";
-        const stateRoot = await this.state.getRootHash(prevRoot);
-
-        // revert temporary state changes from block execution proposal
-        this.state.stateCache = snapshot;
-        this.state.modifiedKeys = modifiedSnapshot;
-
-        return new Block(
-            nextIndex,
-            prevBlock ? prevBlock.getHash() : null,
-            validTxs,
-            this.validatorAddress,
-            stateRoot,
-            [],
-            currentTimestamp
-        );
     }
 
     /**
@@ -441,9 +443,7 @@ class Blockchain {
                 }
 
                 // create a temporary sandbox state manager to avoid polluting main stateCache during proposal validation
-                const sandboxState = new StateManager(null);
-                sandboxState.stateCache = CryptoUtils.deserializeWithBigInt(CryptoUtils.serializeWithBigInt(this.state.stateCache));
-                sandboxState.modifiedKeys = new Set(this.state.modifiedKeys);
+                const sandboxState = this.state.createSandbox();
 
                 // temporarily swap VM's state pointer to sandbox
                 const originalState = this.state;

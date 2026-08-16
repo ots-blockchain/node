@@ -112,6 +112,14 @@ class StateManager {
         const changesHash = CryptoUtils.hash(CryptoUtils.serializeWithBigInt(changes));
         return CryptoUtils.hash(prevRoot ? (prevRoot + changesHash) : changesHash);
     }
+
+    createSandbox() {
+        const sandbox = new StateManager(null);
+        sandbox.db = this.db;
+        sandbox.stateCache = CryptoUtils.deserializeWithBigInt(CryptoUtils.serializeWithBigInt(this.stateCache));
+        sandbox.modifiedKeys = new Set(this.modifiedKeys);
+        return sandbox;
+    }
 }
 
 module.exports = StateManager;
