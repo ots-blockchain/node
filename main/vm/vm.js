@@ -162,6 +162,12 @@ class SmartContractVM {
                     getContractAddress: () => String(currentContractAddr),
                     getBlockIndex: () => Number(blockIndex),
                     
+                    getBalance: async (targetAddress) => {
+                        useGas(costs.DEFAULT);
+                        const targetAcc = await this.state.getAccount(targetAddress);
+                        return BigInt(targetAcc?.balance || 0n);
+                    },
+                    
                     getMsgValue: () => BigInt(callValue), 
                     
                     contractTransfer: async (toAddress, amount) => {
