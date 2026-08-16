@@ -1,4 +1,12 @@
-const { Chalk } = require('chalk');
+let chalk = null;
+try {
+    if (typeof require !== 'undefined') {
+        const { Chalk } = require('chalk');
+        if (Chalk) chalk = new Chalk();
+    }
+} catch (e) {
+    chalk = null;
+}
 
 function formatDate(date, millis = true) {
     const now = date instanceof Date ? date : (date ? new Date(date) : new Date());
@@ -22,16 +30,38 @@ function formatDate(date, millis = true) {
     return `${mskString}.${milliseconds}`;
 }
 
-const chalk = new Chalk();
-const levelNames = [null, chalk.bgGreen(chalk.whiteBright(" INFO  ")), chalk.bgYellow(chalk.whiteBright(" WARN  ")), chalk.bgRed(chalk.whiteBright(" ERROR ")), chalk.bgGray(chalk.whiteBright(" DEBUG "))];
+const levelNames = chalk ? [
+    null,
+    chalk.bgGreen(chalk.whiteBright(" INFO  ")),
+    chalk.bgYellow(chalk.whiteBright(" WARN  ")),
+    chalk.bgRed(chalk.whiteBright(" ERROR ")),
+    chalk.bgGray(chalk.whiteBright(" DEBUG "))
+] : [
+    null,
+    "[INFO]",
+    "[WARN]",
+    "[ERROR]",
+    "[DEBUG]"
+];
 
-class Logger {
+export class Logger {
     constructor(name) {
         this.name = name;
     }
 
     log(level, ...msg) {
-        console.log(`[${chalk.gray(formatDate())}] ${levelNames[level]} ${this.name ? this.name+':' : ''}`, ...msg);
+        const time = chalk ? chalk.gray(formatDate()) : formatDate();
+        const tag = levelNames[level] || `[LEVEL_${level}]`;
+        const prefix = `[${time}] ${tag} ${this.name ? this.name + ':' : ''}`;
+        if (level === 3) {
+            console.error(prefix, ...msg);
+        } else if (level === 2) {
+            console.warn(prefix, ...msg);
+        } else if (level === 4) {
+            console.debug(prefix, ...msg);
+        } else {
+            console.log(prefix, ...msg);
+        }
     }
 
     info(...msg) {
@@ -51,4 +81,10 @@ class Logger {
     }
 }
 
-module.exports = Logger;
+try {
+    if (typeof module !== 'undefined' && module.exports && typeof exports !== 'undefined' && module.exports === exports) {
+        module.exports = Logger;
+    }
+} catch (e) {}
+
+export default Logger;
