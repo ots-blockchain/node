@@ -240,8 +240,24 @@ export class VM {
                 }
             },
             
+            isEqualType: (a, b) => {
+                this.useGas(costs.DEFAULT);
+                if (typeof a !== typeof b) return false;
+                if (a == null && b == null) return a === b;
+                if (a == null || b == null) return false;
+                try {
+                    return toDec(a).eq(toDec(b));
+                } catch (e) {
+                    return a === b;
+                }
+            },
+            
             isNotEqual: (a, b) => {
                 return !funcs.isEqual(a, b);
+            },
+
+            isNotEqualType: (a, b) => {
+                return !funcs.isEqualType(a, b);
             },
             
             isGreater: (a, b) => {
